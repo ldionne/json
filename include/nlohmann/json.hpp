@@ -3342,16 +3342,18 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     @since version 1.0.0
     */
     template < typename ValueType, typename std::enable_if <
-                   !std::is_pointer<ValueType>::value&&
-                   !std::is_same<ValueType, detail::json_ref<basic_json>>::value&&
-                   !std::is_same<ValueType, typename string_t::value_type>::value&&
-                   !detail::is_basic_json<ValueType>::value
-                   && !std::is_same<ValueType, std::initializer_list<typename string_t::value_type>>::value
+                    detail::conjunction<
+                        detail::negation<std::is_pointer<ValueType>>,
+                        detail::negation<std::is_same<ValueType, detail::json_ref<basic_json>>>,
+                        detail::negation<std::is_same<ValueType, typename string_t::value_type>>,
+                        detail::negation<detail::is_basic_json<ValueType>>,
+                        detail::negation<std::is_same<ValueType, std::initializer_list<typename string_t::value_type>>>,
+
 #if defined(JSON_HAS_CPP_17) && (defined(__GNUC__) || (defined(_MSC_VER) && _MSC_VER >= 1910 && _MSC_VER <= 1914))
-                   && !std::is_same<ValueType, typename std::string_view>::value
+                        detail::negation<std::is_same<ValueType, std::string_view>>,
 #endif
-                   && detail::is_detected<detail::get_template_function, const basic_json_t&, ValueType>::value
-                   , int >::type = 0 >
+                        detail::is_detected_lazy<detail::get_template_function, const basic_json_t&, ValueType>
+                    >::value, int >::type = 0 >
     JSON_EXPLICIT operator ValueType() const
     {
         // delegate the call to get<>() const
